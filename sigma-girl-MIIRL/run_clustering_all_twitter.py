@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument('--filter_gradients', action='store_true', help='regularize jacobian matrix')
     parser.add_argument('--trainable_variance', action='store_true', help='fit the variance of the policy')
     parser.add_argument("--init_logstd", type=float, default=-1, help='initial policy variance')
-    parser.add_argument('--save_path', type=str, default='data/twitter', help='path to save the model')
+    parser.add_argument('--save_path', type=str, default='./data_twitter', help='path to save the model')
     args = parser.parse_args()
 
     n_experiments = args.n_experiments
@@ -40,6 +40,7 @@ if __name__ == '__main__':
     states_data = np.load(demonstrations + 'real_states4.pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions2.pkl', allow_pickle=True)
     reward_data = np.load(demonstrations + 'rewards4.pkl', allow_pickle=True)
+    import pdb; pdb.set_trace();
     features_idx = [0, 1, 2]
     GAMMA = args.gamma
     for exp in range(n_experiments):
