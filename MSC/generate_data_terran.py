@@ -8,7 +8,7 @@ from scipy.io import savemat
 dir_path = './parsed_replays/GlobalFeatureVector/Terran_vs_Terran/Terran'
 
 # constants, etc
-terran_actions = 74
+terran_actions = 75
 num_replays =  100
 '''
 features interested in/indexes:
@@ -35,11 +35,6 @@ num_frames = 113 # number of rows
 states = {}
 actions = {}
 rewards = {}
-for i in range(num_replays):
-    index = str(i)
-    states[index] = []
-    rewards[index] = []
-    actions[index] = []
 
 # iterate through first 100 replays, add data to dictionaries
 
@@ -50,13 +45,13 @@ for i in range(num_replays):
     
     # features -> states
     features = data[:num_frames, feature_indexes]
-    states[index].append(features)
+    states[index] = features
 
     # obtain rewards
-    rewards[index].append(features * feature_signs)
+    rewards[index] = features * feature_signs
 
     # append actions
-    actions[index].append(data[:num_frames, 1])
+    actions[index] = data[:num_frames, 1]
 
 save_directory = 'exported_replays'
 
