@@ -68,14 +68,20 @@ states_file_path = os.path.join(save_directory, states_file_name)
 actions_file_path = os.path.join(save_directory, actions_file_name)
 rewards_file_path = os.path.join(save_directory, rewards_file_name)
 
-
 # pickle for python
 pickle.dump(states, open(states_file_path + ".pkl", "wb"))
 pickle.dump(actions, open(actions_file_path + ".pkl", "wb"))
 pickle.dump(rewards, open(rewards_file_path + ".pkl", "wb"))
 
+# rename keys for MATLAB
+for i in range(len(states.keys())):
+    key = list(states.keys())[0]
+    states["id" + key] = states.pop(key)
+    actions["id" + key] = actions.pop(key)
+    rewards["id" + key] = rewards.pop(key)
 
 # save to mat
 savemat(states_file_path + '.mat', states)
 savemat(actions_file_path + '.mat', actions)
 savemat(rewards_file_path + '.mat', rewards)
+
