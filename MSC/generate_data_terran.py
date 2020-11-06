@@ -15,7 +15,7 @@ features interested in/indexes:
     Idea 2 state 3 features (army vs worker, idea for assessing skill) 
         Army supply, - 20
         Worker supply - 21
-        Idea worker count - 22
+        Idle worker count - 22
 '''
 state_indexes = [16,17,18,19,20,21,22,23,24,25,26]
 feature_indexes = [20, 21, 22] # columns of each replay
@@ -30,8 +30,8 @@ first 3 goes up to about 112.5 row
 # each frame is 96 actual frames apart, seems to be 60 frames a second,
 # so each replay maybe 1.6 seconds apart, so first 3 minutes of gameplay = 
 # 3 minutes * 60 seconds = 180 seconds / 1.6 seconds a replay = 112.5 = 113 frames
-num_frames = 113 # number of rows
-
+#num_frames = 113 # number of rows
+num_frames = 150
 
 states = {}
 actions = {}
@@ -56,33 +56,52 @@ for i in range(num_replays):
     actions[index] = data[:num_frames, 1]
 
 
-# reduce action space (to build, train, cancel, research, stop, morph, halt
-
-macro_action_space = ['Build', 'Train', 'Research', 'Morph', 'Cancel', 'Stop', 'Halt', 'None']
+# idea: reduce action space (to build, train, cancel, research, stop, morph, halt
+# alt idea: reduce action space to build, train worker, train army, and maybe
+macro_action_space = ['Build', 'TrainWorker', 'TrainArmy', 'None']
 
 terran_stat = json.load(open('./parsed_replays/Stat/Terran.json'))
 id_reversed = {value: key for (key, value) in terran_stat['action_id'].items()}
 
+# iterate over each player
 for i in range(num_replays):
     index = str(i)
-    for j in range(len(actions[index])):
+    # map actions to macro action space
+    for j in range(num_frames):
         action_id = str(int(actions[index][j]))
         if action_id == '74':
             macro_action = 'None'
         else:
             id_r  = id_reversed[str(action_id)]
+            # get name of action
             action_name = terran_stat['action_name'][id_r]
-            macro_action = action_name[:action_name.index('_')]
+            # if SCV action, then map to TrainWorker,
+            if action_name == "Train_SCV_quick":
+                macro_action = "TrainWorker"
+            else:
+                macro_action = action_name[:action_name.index('_')]
+                # Map to macro action, if a train map to TrainArmy
+                if macro_action == "Train":
+                    macro_action = "TrainArmy"
+                elif macro_action != "Build":
+                    macro_action = "None"
         new_action = macro_action_space.index(macro_action)
         actions[index][j] = new_action
+    # remove None actions from states, rewards, actions
+    valid_states = [False] * num_frames
+    for j in range(num_frames):
+        # set state to be valid if it does not contain the None action
+        valid_states[j] = (actions[index][j] != len(macro_action_space) - 1)
+    # filter arrays
+    actions[index] = actions[index][valid_states]
+    states[index] = states[index][valid_states, :]
+    rewards[index] = rewards[index][valid_states, :]
 
 save_directory = 'exported_replays'
 
-
-
 # make a descriptive file name
 states_file_name  = 'states_TerranVsTerran_{}_{}_[{}:{}]'.format(num_replays,num_frames, state_indexes[0], state_indexes[-1])
-actions_file_name = 'actions_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, len(macro_action_space))
+actions_file_name = 'actions_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, len(macro_action_space) - 1)
 rewards_file_name = 'rewards_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, np.array(feature_indexes) * feature_signs)
 
 states_file_path = os.path.join(save_directory, states_file_name)
