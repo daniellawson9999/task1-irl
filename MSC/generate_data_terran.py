@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from scipy import sparse
 from scipy.io import savemat
-
+import json
 
 dir_path = './parsed_replays/GlobalFeatureVector/Terran_vs_Terran/Terran'
 
@@ -55,13 +55,34 @@ for i in range(num_replays):
     # append actions
     actions[index] = data[:num_frames, 1]
 
+
+# reduce action space (to build, train, cancel, research, stop, morph, halt
+
+macro_action_space = ['Build', 'Train', 'Research', 'Morph', 'Cancel', 'Stop', 'Halt', 'None']
+
+terran_stat = json.load(open('./parsed_replays/Stat/Terran.json'))
+id_reversed = {value: key for (key, value) in terran_stat['action_id'].items()}
+
+for i in range(num_replays):
+    index = str(i)
+    for j in range(len(actions[index])):
+        action_id = str(int(actions[index][j]))
+        if action_id == '74':
+            macro_action = 'None'
+        else:
+            id_r  = id_reversed[str(action_id)]
+            action_name = terran_stat['action_name'][id_r]
+            macro_action = action_name[:action_name.index('_')]
+        new_action = macro_action_space.index(macro_action)
+        actions[index][j] = new_action
+
 save_directory = 'exported_replays'
 
 
 
 # make a descriptive file name
 states_file_name  = 'states_TerranVsTerran_{}_{}_[{}:{}]'.format(num_replays,num_frames, state_indexes[0], state_indexes[-1])
-actions_file_name = 'actions_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, terran_actions)
+actions_file_name = 'actions_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, len(macro_action_space))
 rewards_file_name = 'rewards_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, np.array(feature_indexes) * feature_signs)
 
 states_file_path = os.path.join(save_directory, states_file_name)
