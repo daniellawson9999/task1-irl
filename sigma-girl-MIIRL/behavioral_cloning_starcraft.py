@@ -11,15 +11,16 @@ from gym.spaces import Box, Discrete
 path_to_add = os.path.dirname(os.path.abspath(__file__)) + '/..'
 sys.path = [path_to_add] + sys.path
 from baselines.common.policies_bc import build_policy
-from baselines.common.models import mlp
+from baselines.common.models import mlp, lstm
+import baselines
 import baselines.common.tf_util as U
 
 
-ACTIONS = [i for i in range(75)]
+ACTIONS = [i for i in range(3)]
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_epochs', type=int, default=2000, help='number of epochs of training')
+parser.add_argument('--num_epochs', type=int, default=10000, help='number of epochs of training')
 parser.add_argument('--num_layers', type=int, default=2, help='number of hidden layers of the mlp')
 parser.add_argument('--num_hidden', type=int, default=8, help='number of hidden units per layer')
 parser.add_argument('--dir', type=str, default='bc', help='directory where to save the logs and trained policies')
@@ -29,7 +30,7 @@ parser.add_argument('--dir_to_read', type=str, default='data_starcraft/', help='
 parser.add_argument('--validation', type=float, default=0.2, help='size of validation set')
 parser.add_argument('--stochastic_eval', action='store_true', help='evaluate accuracy with stochastic policy')
 parser.add_argument('--save_best', action='store_true', help='save the best policy')
-parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
+parser.add_argument('--lr', type=float, default=1e-2, help='learning rate')
 parser.add_argument('--l2', type=float, default=0., help='l2 regularization hyperparameter')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size')
 parser.add_argument('--ratio', type=int, default=3, help='threshhold on action imbalance to perform augmentation')
@@ -39,34 +40,50 @@ args = parser.parse_args()
 
 glob_path = args.dir + '/'
 model_name = str(args.num_epochs) + '_' + str(args.num_layers)
+start_time = str(time.time())
 tf.set_random_seed(args.seed)
 np.random.seed(args.seed)
 random.seed(args.seed)
 
-states_data = np.load(args.dir_to_read + 'states_TerranVsTerran_100_113_[20, 21, 22].pkl', allow_pickle=True)
-actions_data = np.load(args.dir_to_read + 'actions_TerranVsTerran_100_113_74.pkl', allow_pickle=True)
+states_data = np.load(args.dir_to_read + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
+actions_data = np.load(args.dir_to_read + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
+
+
 agent_keys = list(actions_data.keys())
+agent_keys = agent_keys[:10]
 
 if args.agents != '':
     agent_keys = [x for x in args.agents.split(',')]
 
 for agent in agent_keys:
     print("Cloning Agent: " + agent)
-    start_time = str(time.time())
     tf_path = glob_path + 'tensorboards/' + agent + '/' + model_name + '_' + start_time + '/'
     model_path = glob_path + 'models/' + agent + '/' + model_name + '_' + start_time + '/'
-    X_dataset = states_data[agent]
+    X_dataset = states_data[agent]#[:, 4:7] # only 3 feature state size
     y_dataset = actions_data[agent]
+
+
+    # moved valid state logic to generate_data_terran.py
+
+    # valid_states = [False] * len(y_dataset)
+    # #valid_states[0] = True
+    # for i in range(1, len(valid_states)):
+    #     valid_states[i] = (y_dataset[i] != 7) #or (y_dataset[i] == 7 and y_dataset[i - 1] != 7)
+    # y_dataset = y_dataset[valid_states]
+    # X_dataset = X_dataset[valid_states, :]
+    
     # dataset build
     states = np.array(X_dataset)
     actions = np.array(y_dataset).flatten()
 
-    tweet_states = states[actions == 1]
-    tweet_actions = actions[actions == 1]
-    nop_states = states[actions == 0]
-    nop_actions = actions[actions == 0]
-    num_tweet = (actions == 1).sum()
-    num_nop = (actions == 0).sum()
+    '''
+        tweet_states = states[actions == 1]
+        tweet_actions = actions[actions == 1]
+        nop_states = states[actions == 0]
+        nop_actions = actions[actions == 0]
+        num_tweet = (actions == 1).sum()
+        num_nop = (actions == 0).sum()
+    '''
 
     ''' Comment out weight balancing for now
     if num_nop > args.ratio * num_tweet:
@@ -85,6 +102,13 @@ for agent in agent_keys:
     else:
         class_weights = None
     '''
+    '''
+    class_weights = [0] * len(ACTIONS)
+    for i in range(len(ACTIONS)):
+        action_num = (actions == i).sum()
+        class_weights[i] = action_num / len(actions)
+    '''
+    #import pdb; pdb.set_trace()
     class_weights = None
     dataset = list(zip(states, actions))
     random.shuffle(dataset)
@@ -94,15 +118,18 @@ for agent in agent_keys:
     tf.reset_default_graph()
     sess = U.make_session(make_default=True)
     network = mlp(num_hidden=args.num_hidden, num_layers=args.num_layers)
+    #network = lstm(nlstm=32)
     policy_train = build_policy(observation_space, action_space, network, l2=args.l2, lr=args.lr, train=True,
-                                class_weights=class_weights)()
+                                class_weights=None)()#(nbatch=1, nsteps=1)
     U.initialize()
     writer = tf.summary.FileWriter(tf_path)
 
     if args.validation > 0.:
         k = math.floor(args.validation * len(dataset))
-        dataset_training = dataset[:-k]
-        dataset_validation = dataset[-k:]
+        #dataset_training = dataset[:-k]
+        #dataset_validation = dataset[-k:]
+        dataset_training = dataset[:]
+        dataset_validation = dataset[:]
     else:
         dataset_training = dataset[:]
 
@@ -125,10 +152,13 @@ for agent in agent_keys:
     # validation samples built
     X_val, y_val = zip(*dataset_validation)
     X_val, y_val = np.array(X_val), np.array(y_val)
+    valid_actions = np.unique(y_val)
+    valid_actions = [int(action) for action in valid_actions.tolist()]
     XX_val, yy_val = [], []
     for i in range(len(ACTIONS)):
         XX_val.append(X_val[y_val == i])
         yy_val.append(y_val[y_val == i])
+
 
     # train + accuracy over epochs
     counter = 0
@@ -141,27 +171,21 @@ for agent in agent_keys:
             base = args.batch_size * i
             batches.append(dataset_training[base: base + args.batch_size])
         # train
-        try :
-            for batch in batches:
-                batch_X, batch_y = zip(*batch)
-                output = policy_train.fit(batch_X, batch_y)
-                summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=output[0]), ])
-                writer.add_summary(summary, counter)
-                counter += 1
-        except:
-            print("Error")
+        for batch in batches:
+            batch_X, batch_y = zip(*batch)
+            output = policy_train.fit(batch_X, batch_y)
+            summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=output[0]), ])
+            writer.add_summary(summary, counter)
+            counter += 1
         # validation
         if args.validation > 0.:
             overall_accuracy = 0
-            for i in range(len(ACTIONS)):
-                try:
-                    accuracy, _ = policy_train.evaluate(XX_val[i], yy_val[i], args.stochastic_eval)
-                except:
-                    print("Error")
+            for i in valid_actions:
+                accuracy, _ = policy_train.evaluate(XX_val[i], yy_val[i], args.stochastic_eval)
                 summary = tf.Summary(value=[tf.Summary.Value(tag="accuracy_"+str(ACTIONS[i]), simple_value=accuracy), ])
                 writer.add_summary(summary, epoch)
                 overall_accuracy += accuracy
-            overall_accuracy /= len(ACTIONS)
+            overall_accuracy /= len(valid_actions)
             summary = tf.Summary(value=[tf.Summary.Value(tag="accuracy_overall", simple_value=overall_accuracy), ])
             writer.add_summary(summary, epoch)
             if  epoch % 10 == 0 and best_accuracy <= overall_accuracy:

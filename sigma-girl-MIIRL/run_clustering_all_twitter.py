@@ -33,14 +33,13 @@ if __name__ == '__main__':
     n_agents = 1
     # where the demonstrations are
     demonstrations = 'data_twitter/'
-    agent_to_data = ['pcastr', 'kotti_sasikanth', '_LXAI', 'sebganaya', 'braincor', 'britbot_art', 'suraj_kja',
+    agent_to_data = ['pcastr' , 'kotti_sasikanth', '_LXAI', 'sebganaya', 'braincor', 'britbot_art', 'suraj_kja',
                      'negar_rz', 'Aditya_elite', 'sara_hlt', 'jigarkdoshi', 'dh7net', 'estebanuribe',
                      'KlimZaporojets', 'mohitban47', 'deeplearningldn']
     num_objectives = 3
     states_data = np.load(demonstrations + 'real_states4.pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions2.pkl', allow_pickle=True)
     reward_data = np.load(demonstrations + 'rewards4.pkl', allow_pickle=True)
-    import pdb; pdb.set_trace();
     features_idx = [0, 1, 2]
     GAMMA = args.gamma
     for exp in range(n_experiments):
@@ -80,9 +79,9 @@ if __name__ == '__main__':
         mus = []
         sigmas = []
         ids = []
-
         for i, agent in enumerate(agent_to_data):
             num_episodes, num_parameters, num_objectives = estimated_gradients_all[i].shape[:]
+
             mu, sigma = estimate_distribution_params(estimated_gradients=estimated_gradients_all[i],
                                                     diag=False, identity=False, other_options=[False, False],
                                                     cov_estimation=True)
@@ -90,7 +89,7 @@ if __name__ == '__main__':
             mus.append(mu)
             sigmas.append(sigma)
             ids.append(id_matrix)
-
+        import pdb; pdb.set_trace()
         P, Omega, loss = em_clustering(mus, sigmas, ids, num_clusters=3,
                                        num_objectives=num_objectives,
                                        optimization_iterations=1)

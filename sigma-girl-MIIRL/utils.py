@@ -68,7 +68,6 @@ def compute_gradient(pi, x_dataset, y_dataset, r_dataset, dones_dataset,
         num_episodes = int(steps // episode_length)
     if verbose:
         print("Episodes:", num_episodes)
-
     discounted_phi = []
     for episode in range(num_episodes):
         base = episode * episode_length
@@ -107,7 +106,6 @@ def compute_gradient(pi, x_dataset, y_dataset, r_dataset, dones_dataset,
     # computing the gradients of the logarithm of the policy wrt policy parameters
     episode_gradients = []
     probs = []
-
     for step in range(steps):
 
         step_layers = pi.compute_gradients([x_dataset[step]], [y_dataset[step]])
@@ -125,7 +123,6 @@ def compute_gradient(pi, x_dataset, y_dataset, r_dataset, dones_dataset,
             # print("Step:",step)
     gradients = []
     ratios = []
-
     for episode in range(num_episodes):
         base = episode * episode_length
         gradients.append(episode_gradients[base: base + episode_length])
@@ -133,7 +130,6 @@ def compute_gradient(pi, x_dataset, y_dataset, r_dataset, dones_dataset,
             ratios.append(probs[base: base + episode_length])
 
     gradients = np.array(gradients)
-
     if behavioral_pi is not None:
         ratios = np.array(ratios)
     # GPOMDP optimal baseline computation
@@ -152,6 +148,7 @@ def compute_gradient(pi, x_dataset, y_dataset, r_dataset, dones_dataset,
             importance_weight = ratios.cumprod(axis=1)
             cum_gradients = cum_gradients * importance_weight
         phi = np.transpose(np.tile(discounted_phi, (num_params, 1, 1)), axes=[1, 2, 0])
+
 
     '''
     # Freeing memory
@@ -447,7 +444,6 @@ def estimate_distribution_params(estimated_gradients, identity=False, diag=False
     est_grad = estimated_gradients.transpose((1, 2, 0)).reshape((num_parameters * num_objectives, num_episodes),
                                                                 order='F')
     mu = np.mean(est_grad, axis=1)
-
     if other_options[0]:
         sigma = np.ones((len(mu), len(mu)))
     elif other_options[1]:

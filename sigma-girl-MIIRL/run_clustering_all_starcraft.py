@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--verbose', action='store_true', help='print logs in console')
     parser.add_argument('--ep_len', type=int, default=113, help='episode length')
-    parser.add_argument('--num_clusters', type=int, default=3, help='# of clusters for EM')
+    parser.add_argument('--num_clusters', type=int, default=4, help='# of clusters for EM')
     parser.add_argument('--save_grad', action='store_true', help='save computed gradients')
     parser.add_argument('--mask', action='store_true', help='mask timesteps for baseline in gradient computation')
     parser.add_argument('--baseline', action='store_true', help='use baseline in gradient computation')
@@ -34,11 +34,11 @@ if __name__ == '__main__':
     n_agents = 1
     # where the demonstrations are
     demonstrations = 'data_starcraft/'
-    agent_to_data = [str(i) for i in range(100)]
+    agent_to_data = [str(i) for i in range(10)] # change to 100
     num_objectives = 3
-    states_data = np.load(demonstrations + 'states_TerranVsTerran_100_113_[20, 21, 22].pkl', allow_pickle=True)
-    actions_data = np.load(demonstrations + 'actions_TerranVsTerran_100_113_74.pkl', allow_pickle=True)
-    reward_data = np.load(demonstrations + 'rewards_TerranVsTerran_100_113_[1, 1, -1].pkl', allow_pickle=True)
+    states_data = np.load(demonstrations + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
+    actions_data = np.load(demonstrations + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
+    reward_data = np.load(demonstrations + 'rewards_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
     features_idx = [0, 1, 2]
     GAMMA = args.gamma
     for exp in range(n_experiments):
@@ -49,9 +49,9 @@ if __name__ == '__main__':
             y_dataset = actions_data[agent_name]
             r_dataset = reward_data[agent_name]
             X_dim = len(X_dataset[0])
-            y_dim = 75 # number of actions
+            y_dim = 3 # number of actions
             # Create Policy
-            model = 'bc/models/' + agent_name + '/2000_22/best'
+            model = 'bc/models/' + agent_name + '/10000_2_1604785401.1200962/best'
             linear = 'gpomdp' in model
             print('load policy..')
             policy_train = load_policy(X_dim=X_dim, model=model, continuous=False, num_actions=y_dim,
@@ -61,7 +61,7 @@ if __name__ == '__main__':
             print('Loading dataset... done')
             # compute gradient estimation
             estimated_gradients, _ = compute_gradient(policy_train, X_dataset, y_dataset, r_dataset, None,
-                                                      args.ep_len, GAMMA, features_idx,
+                                                      len(X_dataset), GAMMA, features_idx,
                                                       verbose=args.verbose,
                                                       use_baseline=args.baseline,
                                                       use_mask=args.mask,
@@ -77,21 +77,23 @@ if __name__ == '__main__':
         mus = []
         sigmas = []
         ids = []
-
+        #import pdb; pdb.set_trace()
         for i, agent in enumerate(agent_to_data):
             num_episodes, num_parameters, num_objectives = estimated_gradients_all[i].shape[:]
             mu, sigma = estimate_distribution_params(estimated_gradients=estimated_gradients_all[i],
-                                                    diag=False, identity=False, other_options=[False, False],
-                                                    cov_estimation=True)
+                                                    diag=False, identity=False, other_options=[False, True],
+                                                    cov_estimation=False) 
             id_matrix = np.identity(num_parameters)
             mus.append(mu)
             sigmas.append(sigma)
             ids.append(id_matrix)
+        #import pdb; pdb.set_trace()
 
         P, Omega, loss = em_clustering(mus, sigmas, ids, num_clusters=num_clusters,
                                        num_objectives=num_objectives,
                                        optimization_iterations=1)
         print(P)
+        import pdb; pdb.set_trace()
         results.append((P, Omega, loss))
     with open(args.save_path + '/results.pkl', 'wb') as handle:
         pickle.dump(results, handle)
