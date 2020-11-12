@@ -50,7 +50,7 @@ actions_data = np.load(args.dir_to_read + 'actions_TerranVsTerran_100_150_3.pkl'
 
 
 agent_keys = list(actions_data.keys())
-agent_keys = agent_keys[:10]
+#agent_keys = agent_keys[:10]
 
 if args.agents != '':
     agent_keys = [x for x in args.agents.split(',')]

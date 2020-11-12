@@ -1,0 +1,1 @@
+{'training_samples': 23, 'batch_size': 32, 'num_batches': 1, 'num_epochs': 10000, 'validation_samples': 23}

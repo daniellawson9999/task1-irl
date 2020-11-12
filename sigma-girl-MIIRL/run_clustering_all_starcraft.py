@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--verbose', action='store_true', help='print logs in console')
     parser.add_argument('--ep_len', type=int, default=113, help='episode length')
-    parser.add_argument('--num_clusters', type=int, default=4, help='# of clusters for EM')
+    parser.add_argument('--num_clusters', type=int, default=10, help='# of clusters for EM')
     parser.add_argument('--save_grad', action='store_true', help='save computed gradients')
     parser.add_argument('--mask', action='store_true', help='mask timesteps for baseline in gradient computation')
     parser.add_argument('--baseline', action='store_true', help='use baseline in gradient computation')
@@ -34,12 +34,12 @@ if __name__ == '__main__':
     n_agents = 1
     # where the demonstrations are
     demonstrations = 'data_starcraft/'
-    agent_to_data = [str(i) for i in range(10)] # change to 100
-    num_objectives = 3
+    agent_to_data = [str(i) for i in range(100)] # change to 100
+    num_objectives = 2
     states_data = np.load(demonstrations + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
     reward_data = np.load(demonstrations + 'rewards_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
-    features_idx = [0, 1, 2]
+    features_idx = [0, 1] #, 2]
     GAMMA = args.gamma
     for exp in range(n_experiments):
         print("Experiment %s" % (exp+1))
@@ -51,7 +51,7 @@ if __name__ == '__main__':
             X_dim = len(X_dataset[0])
             y_dim = 3 # number of actions
             # Create Policy
-            model = 'bc/models/' + agent_name + '/10000_2_1604785401.1200962/best'
+            model = 'bc/models/' + agent_name + '/10000_2_1605210491.256074/best'
             linear = 'gpomdp' in model
             print('load policy..')
             policy_train = load_policy(X_dim=X_dim, model=model, continuous=False, num_actions=y_dim,
@@ -93,7 +93,6 @@ if __name__ == '__main__':
                                        num_objectives=num_objectives,
                                        optimization_iterations=1)
         print(P)
-        import pdb; pdb.set_trace()
         results.append((P, Omega, loss))
     with open(args.save_path + '/results.pkl', 'wb') as handle:
         pickle.dump(results, handle)

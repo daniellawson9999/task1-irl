@@ -97,6 +97,7 @@ for i in range(num_replays):
     states[index] = states[index][valid_states, :]
     rewards[index] = rewards[index][valid_states, :]
 
+import pdb; pdb.set_trace()
 save_directory = 'exported_replays'
 
 # make a descriptive file name
