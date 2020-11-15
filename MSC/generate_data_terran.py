@@ -66,8 +66,8 @@ id_reversed = {value: key for (key, value) in terran_stat['action_id'].items()}
 # iterate over each player
 for i in range(num_replays):
     index = str(i)
-    # map actions to macro action space
     for j in range(num_frames):
+        # map actions to macro action space
         action_id = str(int(actions[index][j]))
         if action_id == '74':
             macro_action = 'None'
@@ -97,7 +97,28 @@ for i in range(num_replays):
     states[index] = states[index][valid_states, :]
     rewards[index] = rewards[index][valid_states, :]
 
-import pdb; pdb.set_trace()
+# re-scale rewards to use the standard score = (x - mu) / sigma)
+num_rewards = len(rewards['0'][0])
+all_rewards = [[] for i in range(num_rewards)] # create arrays for each reward feature
+for i in range(num_replays):
+    all_rewards = np.concatenate((all_rewards, rewards[str(i)].T), axis = 1)
+
+mus = np.nanmean(all_rewards, axis = 1)
+sigmas = np.nanstd(all_rewards, axis = 1)
+
+def standard_score(array, mu, sigma):
+    return (array - mu) / sigma
+
+# modify rewards for all players
+for i in range(num_replays):
+    index = str(i)
+    # standardize each column
+    for j in range(num_rewards):
+        rewards[index][:, j] = standard_score(rewards[index][:, j],
+                                              mus[j], sigmas[j])
+
+
+
 save_directory = 'exported_replays'
 
 # make a descriptive file name
@@ -113,7 +134,6 @@ rewards_file_path = os.path.join(save_directory, rewards_file_name)
 pickle.dump(states, open(states_file_path + ".pkl", "wb"))
 pickle.dump(actions, open(actions_file_path + ".pkl", "wb"))
 pickle.dump(rewards, open(rewards_file_path + ".pkl", "wb"))
-
 # rename keys for MATLAB
 for i in range(len(states.keys())):
     key = list(states.keys())[0]
