@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--verbose', action='store_true', help='print logs in console')
     parser.add_argument('--ep_len', type=int, default=113, help='episode length')
-    parser.add_argument('--num_clusters', type=int, default=10, help='# of clusters for EM')
+    parser.add_argument('--num_clusters', type=int, default=3, help='# of clusters for EM')
     parser.add_argument('--save_grad', action='store_true', help='save computed gradients')
     parser.add_argument('--mask', action='store_true', help='mask timesteps for baseline in gradient computation')
     parser.add_argument('--baseline', action='store_true', help='use baseline in gradient computation')
@@ -51,7 +51,8 @@ if __name__ == '__main__':
             X_dim = len(X_dataset[0])
             y_dim = 3 # number of actions
             # Create Policy
-            model = 'bc/models/' + agent_name + '/10000_2_1605210491.256074/best'
+            model = 'bc/models/' + agent_name + '/12500_2_1605425506.850805/best'
+            # '/10000_2_1605412033.7539003/best' 20 
             linear = 'gpomdp' in model
             print('load policy..')
             policy_train = load_policy(X_dim=X_dim, model=model, continuous=False, num_actions=y_dim,
@@ -93,6 +94,7 @@ if __name__ == '__main__':
                                        num_objectives=num_objectives,
                                        optimization_iterations=1)
         print(P)
+        print(Omega)
         results.append((P, Omega, loss))
-    with open(args.save_path + '/results.pkl', 'wb') as handle:
+    with open(args.save_path + '/results_100_3.pkl', 'wb') as handle:
         pickle.dump(results, handle)

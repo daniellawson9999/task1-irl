@@ -20,7 +20,7 @@ ACTIONS = [i for i in range(3)]
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_epochs', type=int, default=10000, help='number of epochs of training')
+parser.add_argument('--num_epochs', type=int, default=12500, help='number of epochs of training')
 parser.add_argument('--num_layers', type=int, default=2, help='number of hidden layers of the mlp')
 parser.add_argument('--num_hidden', type=int, default=8, help='number of hidden units per layer')
 parser.add_argument('--dir', type=str, default='bc', help='directory where to save the logs and trained policies')
@@ -50,7 +50,7 @@ actions_data = np.load(args.dir_to_read + 'actions_TerranVsTerran_100_150_3.pkl'
 
 
 agent_keys = list(actions_data.keys())
-#agent_keys = agent_keys[:10]
+#agent_keys = agent_keys[:20]
 
 if args.agents != '':
     agent_keys = [x for x in args.agents.split(',')]
