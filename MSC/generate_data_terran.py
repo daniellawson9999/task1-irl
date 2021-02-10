@@ -105,18 +105,31 @@ for i in range(num_replays):
 
 mus = np.nanmean(all_rewards, axis = 1)
 sigmas = np.nanstd(all_rewards, axis = 1)
+maximum = np.nanmax(all_rewards, axis = 1)
+minimum = np.nanmin(all_rewards, axis = 1)
 
 def standard_score(array, mu, sigma):
     return (array - mu) / sigma
+
+def sigma_scale(array, sigma):
+    return array / sigma
+
+def min_max(array, minimum, maximum):
+    return ((array - minimum) / (maximum - minimum))      
+
+# import copy
+# original = copy.deepcopy(rewards)
 
 # modify rewards for all players
 for i in range(num_replays):
     index = str(i)
     # standardize each column
     for j in range(num_rewards):
-        rewards[index][:, j] = standard_score(rewards[index][:, j],
-                                              mus[j], sigmas[j])
-
+        # rewards[index][:, j] = sigma_scale(rewards[index][:, j], sigmas[j])
+        # rewards[index][:, j] = standard_score(rewards[index][:, j],
+        #                                       mus[j], sigmas[j])
+        rewards[index][:, j] = min_max(rewards[index][:, j],
+                                              minimum[j], maximum[j])
 
 
 save_directory = 'exported_replays'
@@ -124,7 +137,8 @@ save_directory = 'exported_replays'
 # make a descriptive file name
 states_file_name  = 'states_TerranVsTerran_{}_{}_[{}:{}]'.format(num_replays,num_frames, state_indexes[0], state_indexes[-1])
 actions_file_name = 'actions_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, len(macro_action_space) - 1)
-rewards_file_name = 'rewards_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, np.array(feature_indexes) * feature_signs)
+rewards_file_name = 'rewards_mm_TerranVsTerran_{}_{}_{}'.format(num_replays,num_frames, np.array(feature_indexes) * feature_signs)
+
 
 states_file_path = os.path.join(save_directory, states_file_name)
 actions_file_path = os.path.join(save_directory, actions_file_name)

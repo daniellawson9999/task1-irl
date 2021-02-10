@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--verbose', action='store_true', help='print logs in console')
     parser.add_argument('--ep_len', type=int, default=113, help='episode length')
-    parser.add_argument('--num_clusters', type=int, default=2, help='# of clusters for EM')
+    parser.add_argument('--num_clusters', type=int, default=3, help='# of clusters for EM')
     parser.add_argument('--save_grad', action='store_true', help='save computed gradients')
     parser.add_argument('--mask', action='store_true', help='mask timesteps for baseline in gradient computation')
     parser.add_argument('--baseline', action='store_true', help='use baseline in gradient computation')
@@ -38,8 +38,8 @@ if __name__ == '__main__':
     num_objectives = 2
     states_data = np.load(demonstrations + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
-    reward_data = np.load(demonstrations + 'rewards_normal_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
-    features_idx = [0, 1] #, 2]
+    reward_data = np.load(demonstrations + 'rewards_mm_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
+    features_idx = [0, 1] #, 2] 
     GAMMA = args.gamma
     for exp in range(n_experiments):
         print("Experiment %s" % (exp+1))
@@ -96,5 +96,5 @@ if __name__ == '__main__':
         print(P)
         print(Omega)
         results.append((P, Omega, loss))
-    with open(args.save_path + '/results_100_3.pkl', 'wb') as handle:
+    with open(args.save_path + '/results_mm_3.pkl', 'wb') as handle:
         pickle.dump(results, handle)
