@@ -1,4 +1,4 @@
-from forward_policies import policy_boltzmann as ps
+#from forward_policies import policy_boltzmann as ps
 import numpy as np
 import gym
 from gym import spaces
@@ -257,16 +257,16 @@ if __name__ == '__main__':
     env = GridWorld_AB(size=5,goal=(4,2), start=(0,2), direction='up', weights=[1,20,1])# coord_x_1=0, coord_x_2=4,coord_y_1=4, coord_y_2=4, center=True)
     state_space = 25
     action_space = 4
-    param, results, states, rewards__, gradients__= ps.gpomdp(env, 100, 30, 30, np.random.random((state_space * action_space)), 0.9, state_space, action_space)
+    # param, results, states, rewards__, gradients__= ps.gpomdp(env, 100, 30, 30, np.random.random((state_space * action_space)), 0.9, state_space, action_space)
 
-    param = pickle.loads(open('param_discrete_center','rb').read())
-    param = param.reshape((25,4))
-    param_new = np.zeros((25,4))
-    for i in range(25):
-        m = np.argmax(param[i])
-        param_new[i][m] = 3.3
-    param = param_new.reshape((-1))
-    open('param_discrete_2_center','wb').write(pickle.dumps(param))
-    env2 = GridWorld_AB(size=5,goal=(4,2), fail_prob=0.1, start=(0,2), randomized_start=False)#
+    # param = pickle.loads(open('param_discrete_center','rb').read())
+    # param = param.reshape((25,4))
+    # param_new = np.zeros((25,4))
+    # for i in range(25):
+    #     m = np.argmax(param[i])
+    #     param_new[i][m] = 3.3
+    # param = param_new.reshape((-1))
+    # open('param_discrete_2_center','wb').write(pickle.dumps(param))
+    # env2 = GridWorld_AB(size=5,goal=(4,2), fail_prob=0.1, start=(0,2), randomized_start=False)#
     # ps.create_batch_trajectories(env2, 10, 20, param, state_space, action_space, True )
 

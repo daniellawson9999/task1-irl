@@ -48,17 +48,18 @@ random.seed(args.seed)
 states_data = np.load(args.dir_to_read + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
 actions_data = np.load(args.dir_to_read + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
 
+experiment_name = 'test'
 
 agent_keys = list(actions_data.keys())
-#agent_keys = agent_keys[:20]
+agent_keys = agent_keys[:10]
 
 if args.agents != '':
     agent_keys = [x for x in args.agents.split(',')]
 
 for agent in agent_keys:
     print("Cloning Agent: " + agent)
-    tf_path = glob_path + 'tensorboards/' + agent + '/' + model_name + '_' + start_time + '/'
-    model_path = glob_path + 'models/' + agent + '/' + model_name + '_' + start_time + '/'
+    tf_path = glob_path + 'tensorboards/' + experiment_name + '/' + agent + '/' + model_name + '_' + start_time + '/'
+    model_path = glob_path + 'models/' + experiment_name + '/' + agent + '/' + model_name + '_' + start_time + '/'
     X_dataset = states_data[agent]#[:, 4:7] # only 3 feature state size
     y_dataset = actions_data[agent]
 

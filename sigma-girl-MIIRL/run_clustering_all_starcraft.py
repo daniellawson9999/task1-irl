@@ -3,6 +3,7 @@ from utils import compute_gradient, load_policy, estimate_distribution_params
 from run_clustering import em_clustering
 import argparse
 import pickle
+import tensorflow as tf
 
 # Directories where the agent policies, trajectories and gradients (if already calcualted) are stored
 # To add agents populate this dictionary and store the gradients in '/gradients/estimated_gradients.npy'
@@ -11,6 +12,9 @@ import pickle
 
 
 if __name__ == '__main__':
+    #sess = tf.InteractiveSession()
+    import gc 
+    gc.collect()
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_layers', type=int, default=1, help='number of hidden layers')
     parser.add_argument('--num_hidden', type=int, default=8, help='number of hidden units')
@@ -18,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--gamma', type=float, default=0.99, help='discount factor')
     parser.add_argument('--verbose', action='store_true', help='print logs in console')
     parser.add_argument('--ep_len', type=int, default=113, help='episode length')
-    parser.add_argument('--num_clusters', type=int, default=3, help='# of clusters for EM')
+    parser.add_argument('--num_clusters', type=int, default=2, help='# of clusters for EM')
     parser.add_argument('--save_grad', action='store_true', help='save computed gradients')
     parser.add_argument('--mask', action='store_true', help='mask timesteps for baseline in gradient computation')
     parser.add_argument('--baseline', action='store_true', help='use baseline in gradient computation')
@@ -34,12 +38,12 @@ if __name__ == '__main__':
     n_agents = 1
     # where the demonstrations are
     demonstrations = 'data_starcraft/'
-    agent_to_data = [str(i) for i in range(100)] # change to 100
-    num_objectives = 2
+    agent_to_data = [str(i) for i in range(10)] # change to 100
+    num_objectives = 3
     states_data = np.load(demonstrations + 'states_TerranVsTerran_100_150_[16:26].pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions_TerranVsTerran_100_150_3.pkl', allow_pickle=True)
-    reward_data = np.load(demonstrations + 'rewards_mm_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
-    features_idx = [0, 1] #, 2] 
+    reward_data = np.load(demonstrations + 'rewards_old_TerranVsTerran_100_150_[ 20  21 -22].pkl', allow_pickle=True)
+    features_idx = [0, 1, 2] 
     GAMMA = args.gamma
     for exp in range(n_experiments):
         print("Experiment %s" % (exp+1))
@@ -51,7 +55,7 @@ if __name__ == '__main__':
             X_dim = len(X_dataset[0])
             y_dim = 3 # number of actions
             # Create Policy
-            model = 'bc/models/' + agent_name + '/12500_2_1605425506.850805/best'
+            model = 'bc/models/test/' + agent_name + '/12500_2_1634490154.0018928/best'
             # '/10000_2_1605412033.7539003/best' 20 
             linear = 'gpomdp' in model
             print('load policy..')
@@ -92,9 +96,10 @@ if __name__ == '__main__':
 
         P, Omega, loss = em_clustering(mus, sigmas, ids, num_clusters=num_clusters,
                                        num_objectives=num_objectives,
-                                       optimization_iterations=1)
+                                       optimization_iterations=1, max_iterations=10)
         print(P)
         print(Omega)
+        print(loss)
         results.append((P, Omega, loss))
-    with open(args.save_path + '/results_mm_3.pkl', 'wb') as handle:
+    with open(args.save_path + '/results_test_example.pkl', 'wb') as handle:
         pickle.dump(results, handle)

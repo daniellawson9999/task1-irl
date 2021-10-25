@@ -40,6 +40,10 @@ if __name__ == '__main__':
     states_data = np.load(demonstrations + 'real_states4.pkl', allow_pickle=True)
     actions_data = np.load(demonstrations + 'actions2.pkl', allow_pickle=True)
     reward_data = np.load(demonstrations + 'rewards4.pkl', allow_pickle=True)
+
+    # import pdb; pdb.set_trace();
+
+
     features_idx = [0, 1, 2]
     GAMMA = args.gamma
     for exp in range(n_experiments):
@@ -89,11 +93,11 @@ if __name__ == '__main__':
             mus.append(mu)
             sigmas.append(sigma)
             ids.append(id_matrix)
-        import pdb; pdb.set_trace()
         P, Omega, loss = em_clustering(mus, sigmas, ids, num_clusters=3,
                                        num_objectives=num_objectives,
                                        optimization_iterations=1)
         print(P)
+        print(Omega)
         results.append((P, Omega, loss))
     with open(args.save_path + '/results.pkl', 'wb') as handle:
         pickle.dump(results, handle)

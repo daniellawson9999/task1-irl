@@ -67,6 +67,7 @@ def em_clustering(mus, sigmas, ids, lamb=1, num_clusters=2, num_objectives=3, ma
         prev_assignment = None
 
         while it < max_iterations:
+            #import pdb; pdb.set_trace()
             it += 1
             # find best omega for assignment
             # equal to minimizing a function for each separate cluster
