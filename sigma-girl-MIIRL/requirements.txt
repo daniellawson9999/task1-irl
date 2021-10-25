@@ -15,3 +15,4 @@ psopy
 cvxopt
 prettytable
 sympy
+pyglet

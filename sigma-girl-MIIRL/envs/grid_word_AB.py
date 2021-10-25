@@ -49,6 +49,9 @@ class GridWorld(gym.Env):
             goal = (shape[1]-1, shape[0])
         if start is None:
             start = (0, shape[0])
+        self.goal = goal
+        self.start = start
+
         self.done = False
         self.init_state = self._coupleToInt(start[0], start[1])
         self.randomized_start = randomized_initial
@@ -92,13 +95,13 @@ class GridWorld(gym.Env):
         if state == self.goal_state: #goal state
             features[2] = 1
         elif x >= 1 and x <= self.W-2 and y >= 1 and y <= self.H-2:  # slow_region
-            features[1] = -np.linalg.norm(self.state - self.goal)
+            features[1] = -np.linalg.norm(state - self.goal_state)
         elif self.direction == 'up' and y < (self.H-1)/2:
-            features[1] = -np.linalg.norm(self.state - self.goal)
+            features[1] = -np.linalg.norm(state - self.goal_state)
         elif self.direction == 'down' and y > (self.H-1)/2:
-            features[1] = -np.linalg.norm(self.state - self.goal)
+            features[1] = -np.linalg.norm(state - self.goal_state)
         else:
-            features[0] = -np.linalg.norm(self.state - self.goal)   # fast region
+            features[0] = -np.linalg.norm(state - self.goal_state)   # fast region
         return features
 
     def step(self, action, ohe=False):
@@ -142,7 +145,7 @@ class GridWorld(gym.Env):
         else:
             self.state = state
         self.done = False
-        return self.get_state(ohe)
+        return self.get_state()
 
     def _render(self, mode='human', close=False):
         if not self.rendering:
@@ -205,7 +208,7 @@ class GridWorld(gym.Env):
         n_actions = 4  # Number of actions
 
         # Compute the initiial state distribution
-        if self.randomized_initial:
+        if self.randomized_start:
             P0 = np.ones(n_states) * 1 / (n_states - 1)
             P0[self.goal_state] = 0
 
