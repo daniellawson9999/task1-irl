@@ -94,8 +94,11 @@ class GridWorld(gym.Env):
 
         if state == self.goal_state: #goal state
             features[2] = 1
+
+        if self.direction == 'center' and y == self.start[1]:
+            features[1] = -np.linalg.norm(state - self.goal_state) / 10
         elif x >= 1 and x <= self.W-2 and y >= 1 and y <= self.H-2:  # slow_region
-            features[1] = -np.linalg.norm(state - self.goal_state)
+             features[1] = -np.linalg.norm(state - self.goal_state) 
         elif self.direction == 'up' and y < (self.H-1)/2:
             features[1] = -np.linalg.norm(state - self.goal_state)
         elif self.direction == 'down' and y > (self.H-1)/2:
@@ -176,7 +179,7 @@ class GridWorld(gym.Env):
         agent = self.viewer.draw_circle(radius=0.4)
         agent.set_color(.8, 0, 0)
         agent_x, agent_y = self._intToCouple(self.state)
-        print(self.state, agent_x, agent_y)
+        #print(self.state, agent_x, agent_y)
         transform = rendering.Transform(translation=(agent_x + 0.5, agent_y + 0.5))
         agent.add_attr(transform)
 
